@@ -314,16 +314,30 @@ async def stay_active_loop(client):
     while True:
         if is_running:
             try:
+                # Wait between 3 to 6 minutes
                 await asyncio.sleep(random.randint(200, 400))
+                
                 messages = await client.get_messages(GROUP_TARGET, limit=5)
-                if messages and random.random() < 0.7:
+                if not messages: continue
+
+                # 60% chance to React, 40% chance to Chat
+                if random.random() < 0.6:
                     target_msg = random.choice(messages)
                     await client(functions.messages.SendReactionRequest(
-                        peer=GROUP_TARGET, msg_id=target_msg.id,
-                        reaction=[types.ReactionEmoji(emoticon=random.choice(['👍', '🔥', '❤️']))]
+                        peer=GROUP_TARGET, 
+                        msg_id=target_msg.id,
+                        reaction=[types.ReactionEmoji(emoticon=random.choice(['👍', '🔥', '❤️', '🤩']))]
                     ))
                     add_log("💓 Activity: Reacted")
-            except: pass
+                else:
+                    fillers = ["lol", "damn", "nice", "gg", "wow"]
+                    async with client.action(GROUP_TARGET, 'typing'):
+                        await asyncio.sleep(random.uniform(2, 5))
+                        await client.send_message(GROUP_TARGET, random.choice(fillers))
+                    add_log("💓 Activity: Sent filler chat")
+
+            except Exception as e:
+                add_log(f"⚠️ Activity Error: {str(e)[:15]}")
         else:
             await asyncio.sleep(10)
 
