@@ -323,31 +323,35 @@ async def main_logic(client):
 
 async def stay_active_loop(client):
     while True:
-        if is_running:
-            try:
-                await asyncio.sleep(random.randint(200, 400))
-                messages = await client.get_messages(GROUP_TARGET, limit=5)
-                if not messages: continue
+        # REMOVED: if is_running: (This allows it to run even if stopped)
+        try:
+            # Wait between 200 to 400 seconds between actions
+            await asyncio.sleep(random.randint(200, 400))
+            
+            messages = await client.get_messages(GROUP_TARGET, limit=5)
+            if not messages: 
+                continue
 
-                if random.random() < 0.6:
-                    target_msg = random.choice(messages)
-                    await client(functions.messages.SendReactionRequest(
-                        peer=GROUP_TARGET, 
-                        msg_id=target_msg.id,
-                        reaction=[types.ReactionEmoji(emoticon=random.choice(['👍', '🔥', '❤️', '🤩']))]
-                    ))
-                    add_log("💓 Activity: Reacted")
-                else:
-                    fillers = ["lol", "damn", "nice", "gg", "wow"]
-                    async with client.action(GROUP_TARGET, 'typing'):
-                        await asyncio.sleep(random.uniform(2, 5))
-                        await client.send_message(GROUP_TARGET, random.choice(fillers))
-                    add_log("💓 Activity: Sent filler chat")
+            if random.random() < 0.6:
+                target_msg = random.choice(messages)
+                await client(functions.messages.SendReactionRequest(
+                    peer=GROUP_TARGET, 
+                    msg_id=target_msg.id,
+                    reaction=[types.ReactionEmoji(emoticon=random.choice(['👍', '🔥', '❤️', '🤩']))]
+                ))
+                add_log("💓 Activity: Reacted (Always On)")
+            else:
+                fillers = ["lol", "damn", "nice", "gg", "wow"]
+                async with client.action(GROUP_TARGET, 'typing'):
+                    await asyncio.sleep(random.uniform(2, 5))
+                    await client.send_message(GROUP_TARGET, random.choice(fillers))
+                add_log("💓 Activity: Sent filler chat (Always On)")
 
-            except Exception as e:
-                add_log(f"⚠️ Activity Error: {str(e)[:15]}")
-        else:
-            await asyncio.sleep(10)
+        except Exception as e:
+            add_log(f"⚠️ Activity Error: {str(e)[:15]}")
+        
+        # REMOVED: else: await asyncio.sleep(10)
+        
 
 async def start_all():
     client = TelegramClient(StringSession(SESSION_STRING), API_ID, API_HASH)
