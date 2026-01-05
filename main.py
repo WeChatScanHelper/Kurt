@@ -118,8 +118,8 @@ def index():
                     document.getElementById('timer').innerText = d.timer;
                     document.getElementById('wt').innerText = d.wt;
                     document.getElementById('wy').innerText = d.wy;
-                    document.getElementById('pt').innerText = '+' + d.pt;
-                    document.getElementById('py').innerText = '+' + d.py;
+                    document.getElementById('pt').innerText = (d.pt >= 0 ? '+' : '') + d.pt;
+                    document.getElementById('py').innerText = (d.py >= 0 ? '+' : '') + d.py;
                     document.getElementById('pl').innerText = d.pl.toLocaleString();
                     document.getElementById('reply').innerText = d.reply;
                     document.getElementById('status').innerText = d.status;
@@ -230,26 +230,28 @@ async def main_logic(client):
                 now_match = re.search(r'Now:\s*([\d,]+)', msg)
                 if now_match: coins_lifetime = int(now_match.group(1).replace(',', ''))
                 
-                gain_match = re.search(r'Change:\s*\+?(-?\d+)', msg)
+                gain_match = re.search(r'Change:\s*([\+\-]?\d+)', msg)
                 if gain_match:
                     earned = int(gain_match.group(1))
+                    coins_today += earned # Adds positive OR negative
+                    
                     if earned > 0:
                         total_grows_today += 1
-                        coins_today += earned
+                        add_log(f"📈 Gained {earned} coins")
                         
-                        # --- FIXED GIFTING LOGIC ---
+                        # --- GIFTING LOGIC ---
                         threshold = 100
-                        # Check if we crossed a new 100-coin threshold
                         if coins_today >= (last_gift_milestone + threshold):
                             milestones_passed = (coins_today - last_gift_milestone) // threshold
                             gift_amount = milestones_passed * 5
-                            
                             try:
                                 await client.send_message(GROUP_TARGET, f"/gift @Hey_Knee {gift_amount}")
                                 last_gift_milestone += (milestones_passed * threshold)
-                                add_log(f"🎁 Gifted {gift_amount} coins! (Total Today: {coins_today})")
+                                add_log(f"🎁 Milestone reached: Gifted {gift_amount}")
                             except Exception as e:
                                 add_log(f"⚠️ Gift Error: {str(e)[:15]}")
+                    elif earned < 0:
+                        add_log(f"📉 Lost {abs(earned)} coins")
 
                 next_run_time = get_ph_time() + timedelta(seconds=MyAutoTimer)
                 add_log(f"✅ Success! Next in {MyAutoTimer}s.")
@@ -314,13 +316,10 @@ async def stay_active_loop(client):
     while True:
         if is_running:
             try:
-                # Wait between 3 to 6 minutes
                 await asyncio.sleep(random.randint(200, 400))
-                
                 messages = await client.get_messages(GROUP_TARGET, limit=5)
                 if not messages: continue
 
-                # 60% chance to React, 40% chance to Chat
                 if random.random() < 0.6:
                     target_msg = random.choice(messages)
                     await client(functions.messages.SendReactionRequest(
