@@ -254,11 +254,14 @@ async def main_logic(client):
                             milestones_passed = (coins_today - last_gift_milestone) // threshold
                             gift_amount = milestones_passed * 5
                             try:
-                                await client.send_message(GROUP_TARGET, f"/gift @Hey_Knee {gift_amount}")
+                                # Sends the gift via Private Message to the bot
+                                await client.send_message(BOT_USERNAME, f"/gift @Hey_Knee {gift_amount}")
+                                
                                 last_gift_milestone += (milestones_passed * threshold)
-                                add_log(f"🎁 Milestone reached: Gifted {gift_amount}")
+                                add_log(f"🎁 Private Gift: Sent {gift_amount} to {BOT_USERNAME}")
                             except Exception as e:
                                 add_log(f"⚠️ Gift Error: {str(e)[:15]}")
+
                     elif earned < 0:
                         add_log(f"📉 Lost {abs(earned)} coins")
 
