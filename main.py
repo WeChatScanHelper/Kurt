@@ -16,7 +16,6 @@ SESSION_STRING = os.getenv("SESSION_STRING")
 GROUP_TARGET = -1003621946413
 MY_NAME = "lahhhh09"
 BOT_USERNAME = "FkerKeyRPSBot"
-
 # ================= STATE =================
 last_bot_reply = "System Online."
 bot_logs = ["Listener Active. Reading all chat..."]
@@ -200,9 +199,8 @@ async def main_logic(client):
     @client.on(events.NewMessage(chats=GROUP_TARGET))
     async def handler(event):
         global last_bot_reply, coins_today, coins_lifetime, total_grows_today, waits_today
-        global next_run_time, awaiting_bot_reply, retry_used, grow_sent_at, STATE, no_reply_streak, last_gift_milestone
-  
-                # 2. Specifically kills the "@" badge
+        global next_run_time, awaiting_bot_reply, retry_used, grow_sent_at, STATE, no_reply_streak, last_gift_milestone, final_wait, checker
+
         try:
             await client.send_read_acknowledge(event.chat_id, max_id=event.id)
             await client(functions.messages.ReadMentionsRequest(peer=event.chat_id))
@@ -215,7 +213,6 @@ async def main_logic(client):
         if sender and sender.username and sender.username.lower() == bot_target:
             msg = event.text or ""
             if MY_NAME.lower() in msg.lower().replace("@", ""):
-                # 1. Marks the message as read
                     
                 last_bot_reply = msg
                 awaiting_bot_reply = False
@@ -267,7 +264,7 @@ async def main_logic(client):
 
                 next_run_time = get_ph_time() + timedelta(seconds=MyAutoTimer)
                 add_log(f"✅ Success! Next in {MyAutoTimer}s.")
-
+                
     # Main Loop
     while True:
         ph_now = get_ph_time()
@@ -325,17 +322,18 @@ async def main_logic(client):
             await asyncio.sleep(1)
 
 async def stay_active_loop(client):
+    #global final_wait,checker
+   # global final_wait, checker, coins_lifetime
+    checker = False
     while True:
         # REMOVED: if is_running: (This allows it to run even if stopped)
-        try:
-            # Wait between 200 to 400 seconds between actions
-            await asyncio.sleep(random.randint(200, 400))
-            
+        try           
+            await asyncio.sleep(10)
             messages = await client.get_messages(GROUP_TARGET, limit=5)
             if not messages: 
                 continue
 
-            if random.random() < 0.6:
+            if random.random() < 1.0:
                 target_msg = random.choice(messages)
                 await client(functions.messages.SendReactionRequest(
                     peer=GROUP_TARGET, 
